@@ -25,21 +25,5 @@ az ad sp create-for-rbac
 
 2. **Run the Script**: Use a tool like Visual Studio Code with the REST Client extension to run the requests in `api-trace.http` script.  Run the requests in order, it will authenticate using the provided Entra app registration details and retrieve the API trace information.  The output trace response can be saved to disk using the save response icon which will appear above the response pane.
 
-## Example
-
-```http
-# Set variables
-@client_id = <your-client-id>
-@client_secret = <your-client-secret>
-@tenant_id = <your-tenant-id>
-@subscription_id = <your-subscription-id>
-@resource_group = <your-resource-group>
-@service_name = <your-service-name>
-@trace_id = <your-trace-id>
-
-# Request to get the API trace
-GET https://management.azure.com/subscriptions/{{subscription_id}}/resourceGroups/{{resource_group}}/providers/Microsoft.ApiManagement/service/{{service_name}}/traces/{{trace_id}}?api-version=2021-04-01-preview
-Authorization: Bearer {{access_token}}
-```
 
 Ensure you replace the placeholder values with your actual details before running the script.
