@@ -1,0 +1,61 @@
+// Set up variables
+@subscriptionId = your_subscription_id_here
+@resourceGroup = // your_resource_group_here
+@apimName = // your_apim_name_here
+@clientId = // your_client_id_here
+@clientSecret = // your_client_secret_here
+@externalHost = //  your_external_host_here this is either external apim name or the hos ton app gateway
+// product 1
+@subscriptionKey = // your_subscription_key_here
+@apiEndPoint = // your_api_endpoint_here
+@requestBody = {"messages": [{"role":"system","content":"You are an AI assistant that helps people find information."}]}
+@tenantId = // your_tenant_id_here
+
+// Login
+###
+# @name login
+post https://login.microsoftonline.com/{{tenantId}}/oauth2/token
+content-type: application/x-www-form-urlencoded
+
+grant_type=client_credentials&client_id={{clientId}}&client_secret={{clientSecret}}&resource=https%3A%2F%2Fmanagement.azure.com%2F
+
+###
+@authToken = {{login.response.body.$.access_token}}
+
+###
+# @name listDebugCredentials
+POST https://management.azure.com/subscriptions/{{subscriptionId}}/resourceGroups/{{resourceGroup}}/providers/Microsoft.ApiManagement/service/{{apimName}}/gateways/managed/listDebugCredentials?api-version=2023-05-01-preview
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+    "credentialsExpireAfter": "PT1H",
+    "apiId": "/subscriptions/{{subscriptionId}}/resourceGroups/{{resourceGroup}}/providers/Microsoft.ApiManagement/service/{{apimName}}/apis/azure-openai-api",
+    "purposes": ["tracing"]
+}
+
+###
+@debugToken = {{listDebugCredentials.response.body.$.token}}
+
+###
+# @name callApi
+post {{apiEndPoint}}
+Host: {{externalHost}}
+Ocp-Apim-Subscription-Key: {{subscriptionKey}}
+Content-Type: application/json
+Apim-Debug-Authorization: {{debugToken}}
+
+{{requestBody}}
+
+###
+@traceId = {{callApi.response.headers.Apim-Trace-Id}}
+
+###
+# @name getTrace
+post https://management.azure.com/subscriptions/{{subscriptionId}}/resourceGroups/{{resourceGroup}}/providers/Microsoft.ApiManagement/service/{{apimName}}/gateways/managed/listTrace?api-version=2024-06-01-preview
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+    "traceId": "{{traceId}}"
+}
